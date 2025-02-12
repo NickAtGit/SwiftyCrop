@@ -1,4 +1,5 @@
 import SwiftUI
+import AppFoundation
 
 struct CropView: View {
     @Environment(\.dismiss) private var dismiss
@@ -73,15 +74,6 @@ struct CropView: View {
             }
 
         VStack {
-            Text(
-                configuration.texts.interactionInstructions ??
-                NSLocalizedString("interaction_instructions", tableName: localizableTableName, bundle: .module, comment: "")
-            )
-            .font(configuration.fonts.interactionInstructions)
-            .foregroundColor(configuration.colors.interactionInstructions)
-            .padding(.top, 30)
-            .zIndex(1)
-
             ZStack {
                 Image(uiImage: image)
                     .resizable()
@@ -109,40 +101,21 @@ struct CropView: View {
                         MaskShapeView(maskShape: maskShape)
                             .frame(width: viewModel.maskSize.width, height: viewModel.maskSize.height)
                     )
+                    .overlay {
+                        BorderMaskShapeView(maskShape: maskShape)
+                            .frame(width: viewModel.maskSize.width, height: viewModel.maskSize.height)
+                    }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .simultaneousGesture(magnificationGesture)
             .simultaneousGesture(dragGesture)
             .simultaneousGesture(configuration.rotateImage ? rotationGesture : nil)
-
-            HStack {
-                Button {
-                    dismiss()
-                } label: {
-                    Text(
-                        configuration.texts.cancelButton ??
-                        NSLocalizedString("cancel_button", tableName: localizableTableName, bundle: .module, comment: "")
-                    )
-                }
-                .font(configuration.fonts.cancelButton)
-                .foregroundColor(configuration.colors.cancelButton)
-
-                Spacer()
-
-                Button {
+            .bottomSafeAreaInsetContent {
+                LargeRoundedButton(title: String(localized: "Continue", bundle: .module)) {
                     onComplete(cropImage())
-                    dismiss()
-                } label: {
-                    Text(
-                        configuration.texts.saveButton ??
-                        NSLocalizedString("save_button", tableName: localizableTableName, bundle: .module, comment: "")
-                    )
-                    .font(configuration.fonts.saveButton)
                 }
-                .foregroundColor(configuration.colors.saveButton)
+                .padding()
             }
-            .frame(maxWidth: .infinity, alignment: .bottom)
-            .padding()
         }
         .background(configuration.colors.background)
     }
@@ -184,6 +157,23 @@ struct CropView: View {
                     Circle()
                 case .square, .rectangle:
                     Rectangle()
+                }
+            }
+        }
+    }
+
+    private struct BorderMaskShapeView: View {
+        let maskShape: MaskShape
+
+        var body: some View {
+            Group {
+                switch maskShape {
+                case .circle:
+                    Circle()
+                        .strokeBorder(.white.opacity(0.3), lineWidth: 2)
+                case .square, .rectangle:
+                    Rectangle()
+                        .strokeBorder(.white.opacity(0.3), lineWidth: 2)
                 }
             }
         }
